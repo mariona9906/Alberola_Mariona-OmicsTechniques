@@ -1,0 +1,47 @@
+---
+title: Analysis of gene expression in colorectal cancer DLD1 cells with UHRF1 depletion
+  and HDAC inhibition
+author: "Mariona Alberola"
+date: "22 de mayo de 2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+## Summary	
+UHRF1 is a major regulator of epigenetic mechanism and is overexpressed in various human malignancies. In this study, we examined the involvement of UHRF1 in aberrant DNA methylation in colorectal cancer (CRC). In CRC cells, transient UHRF1 knockdown rapidly induced DNA demethylation across entire genomic regions, including CpG islands, gene bodies and repetitive elements. Nonetheless, UHRF1 depletion only minimally reversed CpG island hypermethylation-associated gene silencing. However, the combination of UHRF1 depletion and histone deacetylase (HDAC) inhibition synergistically reactivated the silenced genes and strongly suppressed CRC cell proliferation. Our results suggest that (i) maintenance of DNA methylation in CRC cells is highly dependent on UHRF1; (ii) UHRF1 depletion rapidly induces DNA demethylation, though it is insufficient to fully reactivate the silenced genes; and (iii) dual targeting of UHRF1 and HDAC may be an effective new therapeutic strategy.
+ 	
+## Overall design	
+DLD1 cells were transfected with a control siRNA (Thermo Fisher Scientific) or siRNAs targeting UHRF1 (Thermo Fisher Scientific) using using Lipofectamine RNAiMAX (Thermo Fisher Scientific) and incubated for 48 h. Cells were then treated with mock (ethanol) or 300 nM Trichostatin A (TSA) for additional 24 h.
+ 	
+## Contributor(s)	
+Suzuki H
+
+## Citation(s)	
+Niinuma T, Kitajima H, Kai M, Yamamoto E et al. UHRF1 depletion and HDAC inhibition reactivate epigenetically silenced genes in colorectal cancer cells. Clin Epigenetics 2019 May 7;11(1):70. PMID: 31064417
+
+
+
+
+
+
+```{r}
+targets<- read.csv("samples.txt", sep="")
+```
+
+```{r}
+expressions <- read.delim("GSE106402_series_matrix.txt", header = TRUE, row.names = 1)
+```
+
+```{r}
+dim(expressions)
+summary(expressions)
+```
+
+```{r}
+boxplot(log(expressions), col = c(1,2,3,4,5,6,7,8,9))
+```
+
+
+
