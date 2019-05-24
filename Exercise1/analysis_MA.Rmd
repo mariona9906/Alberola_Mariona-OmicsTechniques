@@ -32,6 +32,7 @@ targets<- read.csv("samples.txt", sep="")
 
 ```{r}
 expressions <- read.delim("GSE106402_series_matrix.txt", header = TRUE, row.names = 1)
+expressions
 ```
 
 ```{r}
@@ -41,6 +42,153 @@ summary(expressions)
 
 ```{r}
 boxplot(log(expressions), col = c(1,2,3,4,5,6,7,8,9))
+```
+```{r}
+
+## ----simulateData--------------------------------------------------------
+expressionValues <- data.matrix(expressions,rownames.force = NA)
+```
+
+
+
+```{r}
+## ----simulateGeneInfo----------------------------------------------------
+myGenes <-  rownames(expressionValues)
+myGenes
+```
+
+```{r}
+
+## ----simulateInfo--------------------------------------------------------
+myInfo=list(myName="Mariona Alberola", myLab="Omics Lab", 
+          myContact="mariona.alberola@alum.esci.upf.edu", myTitle="Practical Exercise on ExpressionSets")
+show(myInfo)
+```
+
+
+```{r}
+## ----subsetExpressions---------------------------------------------------
+newExpress<- expressionValues[,-8]
+newTargets <- targets[-9,]
+wrongNewTargets <- targets [-10,]
+newExpress
+newTargets
+wrongNewTargets
+```
+
+
+```{r}
+## ----loadPackage---------------------------------------------------------
+require(Biobase)
+```
+
+
+```{r}
+## ----creaExpressionSet1--------------------------------------------------
+myEset <- ExpressionSet(expressionValues)
+class(myEset)
+show(myEset)
+```
+
+
+```{r}
+## ----AnnotatedDataFrame2-------------------------------------------------
+columnDesc <-  data.frame(labelDescription= c("Sample_Name", "Cell", "Experiment_Type", "TSA", "Replicate"))
+myAnnotDF <- new("AnnotatedDataFrame", data=targets, varMetadata= columnDesc)
+show(myAnnotDF)
+```
+
+
+```{r}
+## ------------------------------------------------------------------------
+phenoData(myEset) <- myAnnotDF
+pData(myAnnotDF)
+
+## ----eval=FALSE----------------------------------------------------------
+## # (pData(myAnnotDF))<-pData(myAnnotDF)$sample_Name
+## # Error in validObject(.Object) :
+## #   invalid class ExpressionSet object: 1: sampleNames differ between assayData and phenoData
+## # invalid class ExpressionSet object: 2: sampleNames differ between phenoData and protocolData
+```
+
+
+```{r}
+## ------------------------------------------------------------------------
+rownames(pData(myAnnotDF))<-pData(myAnnotDF)$Sample_Name
+myEset <- ExpressionSet(assayData=expressionValues, phenoData=myAnnotDF)
+show(myEset)
+```
+
+
+```{r}
+## ------------------------------------------------------------------------
+myEset <- ExpressionSet(assayData=expressionValues, 
+                        phenoData=myAnnotDF, 
+                        featureNames = myGenes)
+# show(myEset)
+```
+
+
+```{r}
+## ----label=MIAME---------------------------------------------------------
+myDesc <- new("MIAME", name= myInfo[["myName"]],
+            lab= myInfo[["myLab"]],
+            contact= myInfo[["myContact"]] ,
+            title=myInfo[["myTitle"]])
+print(myDesc)
+```
+
+
+```{r}
+## ------------------------------------------------------------------------
+myEset <- ExpressionSet(assayData=expressionValues, 
+                        phenoData=myAnnotDF,
+                        fetureNames =myGenes,
+                        experimentData = myDesc)
+# show(myEset)
+```
+
+
+```{r}
+## ----usingExpressionSets-------------------------------------------------
+dim(exprs(myEset))
+class(phenoData(myEset))
+class(pData(phenoData(myEset)))
+head(pData(phenoData(myEset)))
+head(pData(myEset))
+```
+
+
+```{r}
+## ------------------------------------------------------------------------
+smallEset <- myEset[1:15,c(1:3,6:8)]
+dim(exprs(smallEset))
+dim(pData(smallEset))
+head(pData(smallEset))
+all(colnames(exprs(smallEset))==rownames(pData(smallEset)))
+```
+
+
+```{r}
+## ------------------------------------------------------------------------
+youngEset <- myEset[,pData(myEset)$age<30]
+dim(exprs(youngEset))
+head(pData(youngEset))
+```
+
+
+```{r}
+## ------------------------------------------------------------------------
+if (!require(GEOquery)) {
+  BiocManager::install("GEOquery")
+}
+require(GEOquery)
+gse <- getGEO("GSE106402")
+class(gse)
+names(gse)
+gse[[1]]
+esetFromGEO <- gse[[1]]
+esetFromGEO
 ```
 
 
