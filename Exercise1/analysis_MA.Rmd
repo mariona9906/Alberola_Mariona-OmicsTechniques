@@ -28,12 +28,16 @@ Niinuma T, Kitajima H, Kai M, Yamamoto E et al. UHRF1 depletion and HDAC inhibit
 
 ```{r}
 targets<- read.csv("samples.txt", sep="")
+targets
+
 ```
+
 
 ```{r}
 expressions <- read.delim("GSE106402_series_matrix.txt", header = TRUE, row.names = 1)
-expressions
+class(expressions)
 ```
+
 
 ```{r}
 dim(expressions)
@@ -43,6 +47,8 @@ summary(expressions)
 ```{r}
 boxplot(log(expressions), col = c(1,2,3,4,5,6,7,8,9))
 ```
+I used the log() function to normalize the data because it had many outliers. In the boxplot obtained we can see that the data is divided in two groups, one of them represented as boxplots and the other one represents the outliers after normalizing it.
+
 ```{r}
 
 ## ----simulateData--------------------------------------------------------
@@ -67,22 +73,11 @@ show(myInfo)
 
 
 ```{r}
-## ----subsetExpressions---------------------------------------------------
-newExpress<- expressionValues[,-8]
-newTargets <- targets[-9,]
-wrongNewTargets <- targets [-10,]
-newExpress
-newTargets
-wrongNewTargets
-```
-
-
-```{r}
 ## ----loadPackage---------------------------------------------------------
 require(Biobase)
 ```
 
-
+Now we have to create the expression set:
 ```{r}
 ## ----creaExpressionSet1--------------------------------------------------
 myEset <- ExpressionSet(expressionValues)
@@ -145,10 +140,10 @@ myEset <- ExpressionSet(assayData=expressionValues,
                         phenoData=myAnnotDF,
                         fetureNames =myGenes,
                         experimentData = myDesc)
-# show(myEset)
+ show(myEset)
 ```
 
-
+Now that the expression set has been created and we've already added all the necessary information, it's already prepared to be used
 ```{r}
 ## ----usingExpressionSets-------------------------------------------------
 dim(exprs(myEset))
@@ -166,15 +161,9 @@ dim(exprs(smallEset))
 dim(pData(smallEset))
 head(pData(smallEset))
 all(colnames(exprs(smallEset))==rownames(pData(smallEset)))
+pData(smallEset)
 ```
 
-
-```{r}
-## ------------------------------------------------------------------------
-youngEset <- myEset[,pData(myEset)$age<30]
-dim(exprs(youngEset))
-head(pData(youngEset))
-```
 
 
 ```{r}
