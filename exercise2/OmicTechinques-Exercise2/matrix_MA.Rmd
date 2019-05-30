@@ -1,0 +1,106 @@
+---
+title: "Using Limma for Microarray Data Analysis"
+author: "Mariona Alberola"
+date: "29 de mayo de 2019"
+output: html_document
+---
+
+```{r global_options, include=FALSE}
+knitr::opts_chunk$set(fig.width = 12, fig.height = 8, cache = FALSE,
+                      echo = FALSE, warning = FALSE, message = FALSE)
+```
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+## Summary	
+UHRF1 is a major regulator of epigenetic mechanism and is overexpressed in various human malignancies. In this study, we examined the involvement of UHRF1 in aberrant DNA methylation in colorectal cancer (CRC). In CRC cells, transient UHRF1 knockdown rapidly induced DNA demethylation across entire genomic regions, including CpG islands, gene bodies and repetitive elements. Nonetheless, UHRF1 depletion only minimally reversed CpG island hypermethylation-associated gene silencing. However, the combination of UHRF1 depletion and histone deacetylase (HDAC) inhibition synergistically reactivated the silenced genes and strongly suppressed CRC cell proliferation. Our results suggest that (i) maintenance of DNA methylation in CRC cells is highly dependent on UHRF1; (ii) UHRF1 depletion rapidly induces DNA demethylation, though it is insufficient to fully reactivate the silenced genes; and (iii) dual targeting of UHRF1 and HDAC may be an effective new therapeutic strategy.
+ 
+Obviously this is an observational study but its analysis can be done using a linear model approach as well.
+
+1. Identify the experimental factors and their levels.
+2. Write down the design matrix associated with this study design.
+3. Build the contrast matrix that is:
+
+  
+    1. "siCONT_noTSA" vs “siUHRF1_noTSA”
+    2. “siCONT_noTSA" vs “siCONT_TSA”
+    3. “siCONT_noTSA" vs "siUHRF1_TSA"
+    4. "siUHRF1_noTSA" vs "siCONT_TSA"
+    5. "siUHRF1_noTSA" vs "siUHRF1_TSA"
+    6. "siCONT_TSA" vs "siUHRF1_TSA"
+ 
+
+## Overall design	
+DLD1 cells were transfected with a control siRNA (Thermo Fisher Scientific) or siRNAs targeting UHRF1 (Thermo Fisher Scientific) using using Lipofectamine RNAiMAX (Thermo Fisher Scientific) and incubated for 48 h. Cells were then treated with mock (ethanol) or 300 nM Trichostatin A (TSA) for additional 24 h.
+ 	
+## Contributor(s)	
+Suzuki H
+
+## Citation(s)	
+Niinuma T, Kitajima H, Kai M, Yamamoto E et al. UHRF1 depletion and HDAC inhibition reactivate epigenetically silenced genes in colorectal cancer cells. Clin Epigenetics 2019 May 7;11(1):70. PMID: 31064417
+
+    
+
+```{r readTargets}
+targets<- read.csv("samples2.txt", sep="")
+targets
+```
+
+```{r readData}
+expressions <- read.delim("GSE106402_series_matrix.txt", header = TRUE, row.names = 1)
+dataMatrix <- expressions
+```
+
+```{r designMatrix}
+require(limma)
+
+design <-model.matrix(~ 0+targets$Experiment_Types)
+design
+colnames(design)<-c("cn", "un", "cs", "us")
+rownames(design)<- targets$SampleIDs 
+ print(design)
+```
+Where: 
+cn = siCONT_noTSA, 
+un = siUHRF1_noTSA, 
+cs = siCONT_TSA, 
+us = siUHRF1_TSA
+
+```{r contrastsMatrix}
+cont.matrix <- makeContrasts (
+  cnVSun = cn-un,
+  cnVScs = cn-cs,
+  cnVSus = cn-us,
+  unVScs = un-cs,
+  unVSus = un-us,
+  csVSus = cs-us,
+  
+  levels=design)
+cont.matrix
+```
+
+```{r fitModel}
+require(limma)
+fit<-lmFit(dataMatrix, design)
+fit.main<-contrasts.fit(fit, cont.matrix)
+fit.main<-eBayes(fit.main)
+```
+
+```{r extractResults}
+topTab_cnVSun <- topTable (fit.main, number=nrow(fit.main), coef="cnVSun", adjust="fdr"); head(topTab_cnVSun)
+topTab_cnVScs <- topTable (fit.main, number=nrow(fit.main), coef="cnVScs", adjust="fdr"); head(topTab_cnVScs)
+topTab_cnVSus <- topTable (fit.main, number=nrow(fit.main), coef="cnVSus", adjust="fdr"); head(topTab_cnVSus)
+topTab_unVScs <- topTable (fit.main, number=nrow(fit.main), coef="unVScs", adjust="fdr"); head(topTab_unVScs)
+topTab_unVSus <- topTable (fit.main, number=nrow(fit.main), coef="unVSus", adjust="fdr"); head(topTab_unVSus)
+topTab_csVSus <- topTable (fit.main, number=nrow(fit.main), coef="csVSus", adjust="fdr"); head(topTab_csVSus)
+```
+     
+```{r showResults}
+volcanoplot(fit.main, coef="cnVSun", highlight=10)
+volcanoplot(fit.main, coef="cnVScs", highlight=10)
+volcanoplot(fit.main, coef="cnVSus", highlight=10)
+volcanoplot(fit.main, coef="unVScs", highlight=10)
+volcanoplot(fit.main, coef="unVSus", highlight=10)
+volcanoplot(fit.main, coef="csVSus", highlight=10)
+```
